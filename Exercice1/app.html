@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Utilisateur</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+       
+        .user-selector {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+       
+        .user-selector select {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #3498db;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+       
+        .user-selector button {
+            padding: 8px 16px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+       
+        .user-selector button:hover {
+            background-color: #2980b9;
+        }
+       
+        .profile {
+            background-color: #f5f5f5;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+       
+        .profile h1 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+       
+        .avatar {
+            margin: 15px 0;
+        }
+       
+        .avatar img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid #3498db;
+        }
+       
+        .info {
+            margin-top: 15px;
+        }
+       
+        .info p {
+            margin: 8px 0;
+        }
+       
+        .users-table {
+            margin-top: 30px;
+            overflow-x: auto;
+        }
+       
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+       
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+       
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+       
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+       
+        .orders {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e9f7ef;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+       
+        .orders h2 {
+            color: #27ae60;
+            margin-top: 0;
+        }
+       
+        .orders ul {
+            list-style-type: none;
+            padding: 0;
+        }
+       
+        .orders li {
+            padding: 8px 0;
+            border-bottom: 1px solid #d5f5e3;
+        }
+       
+        .loading {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+       
+        .error {
+            color: red;
+            padding: 20px;
+            background: #ffeeee;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="user-controls" class="user-selector">
+        <label for="user-select">Sélectionner un utilisateur :</label>
+        <select id="user-select">
+            <option value="1">John Doe</option>
+            <option value="2">Jane Smith</option>
+            <option value="3">Bob Johnson</option>
+            <option value="4">Alice Williams</option>
+        </select>
+        <button id="change-user">Charger le profil</button>
+    </div>
+   
+    <div id="app">
+        <p class="loading">Chargement des données utilisateur...</p>
+    </div>
+
+    <script>
+        // Base de données des utilisateurs
+        const usersDatabase = {
+            1: {
+                id: 1,
+                name: 'John Doe',
+                email: 'johndoe@example.com',
+                avatar: 'https://i.pravatar.cc/150?img=3',
+                gender: 'M',
+                login: 'johndoe',
+                password: 'securepassword123',
+                address: {
+                    street: '123 Main St',
+                    city: 'New York',
+                    zipCode: '10001'
+                },
+                orders: []
+            },
+            2: {
+                id: 2,
+                name: 'Jane Smith',
+                email: 'janesmith@example.com',
+                avatar: 'https://i.pravatar.cc/150?img=1',
+                gender: 'F',
+                login: 'janesmith',
+                password: 'securepass',
+                address: {
+                    street: '456 Oak Ave',
+                    city: 'Los Angeles',
+                    zipCode: '90001'
+                },
+                orders: []
+            },
+            3: {
+                id: 3,
+                name: 'Bob Johnson',
+                email: 'bob@example.com',
+                avatar: 'https://i.pravatar.cc/150?img=5',
+                gender: 'M',
+                login: 'bobj',
+                password: 'bobspass',
+                address: {
+                    street: '789 Pine Rd',
+                    city: 'Chicago',
+                    zipCode: '60601'
+                },
+                orders: []
+            },
+            4: {
+                id: 4,
+                name: 'Alice Williams',
+                email: 'alice@example.com',
+                avatar: 'https://i.pravatar.cc/150?img=9',
+                gender: 'F',
+                login: 'alicew',
+                password: 'alicepass',
+                address: {
+                    street: '321 Elm St',
+                    city: 'San Francisco',
+                    zipCode: '94101'
+                },
+                orders: []
+            }
+        };
+
+        // Base de données des commandes
+        const ordersDatabase = {
+            'johndoe': [
+                { id: 1, product: 'Laptop', amount: 999.99, date: '2023-05-15' },
+                { id: 2, product: 'Smartphone', amount: 699.99, date: '2023-06-20' },
+                { id: 3, product: 'Casque audio', amount: 149.99, date: '2023-07-10' }
+            ],
+            'janesmith': [
+                { id: 1, product: 'Tablette', amount: 499.99, date: '2023-04-10' },
+                { id: 2, product: 'Montre connectée', amount: 199.99, date: '2023-06-05' }
+            ],
+            'bobj': [
+                { id: 1, product: 'PC Gamer', amount: 1299.99, date: '2023-03-15' },
+                { id: 2, product: 'Souris gaming', amount: 79.99, date: '2023-05-22' },
+                { id: 3, product: 'Clavier mécanique', amount: 129.99, date: '2023-06-18' },
+                { id: 4, product: 'Écran 27"', amount: 249.99, date: '2023-07-01' }
+            ],
+            'alicew': [
+                { id: 1, product: 'Laptop Ultrabook', amount: 1199.99, date: '2023-02-28' }
+            ]
+        };
+
+        // Fonction qui simule la récupération asynchrone des données utilisateur
+        async function fetchUserData(userId) {
+            console.log(`Récupération des données pour l'utilisateur ${userId}...`);
+           
+            // Simulation d'un délai de 1 seconde
+            await new Promise(resolve => setTimeout(resolve, 1000));
+           
+            if (!usersDatabase[userId]) {
+                throw new Error('Utilisateur non trouvé');
+            }
+           
+            const userData = {...usersDatabase[userId]}; // Copie de l'objet
+            console.log("Données utilisateur récupérées !");
+            return userData;
+        }
+
+        // Fonction pour afficher le profil utilisateur
+        function displayProfile(user) {
+            const app = document.getElementById('app');
+            app.innerHTML = '';
+           
+            const profileSection = document.createElement('div');
+            profileSection.className = 'profile';
+            profileSection.innerHTML = `
+                <h1>Profil Utilisateur</h1>
+                <div class="avatar">
+                    <img src="${user.avatar}" alt="${user.name}">
+                </div>
+                <div class="info">
+                    <p><strong>Nom:</strong> ${user.name}</p>
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    <p><strong>Genre:</strong> ${user.gender === 'M' ? 'Masculin' : 'Féminin'}</p>
+                    <p><strong>Login:</strong> ${user.login}</p>
+                    <p><strong>Adresse:</strong> ${user.address.street}, ${user.address.city} ${user.address.zipCode}</p>
+                </div>
+            `;
+           
+            app.appendChild(profileSection);
+        }
+
+        // Fonction pour créer plusieurs utilisateurs et les afficher dans un tableau
+        async function createAndDisplayUsers() {
+            // Création du tableau
+            const tableSection = document.createElement('div');
+            tableSection.className = 'users-table';
+            tableSection.innerHTML = `
+                <h2>Liste des Utilisateurs</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Email</th>
+                            <th>Login</th>
+                            <th>Adresse</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.values(usersDatabase).map(user => `
+                            <tr>
+                                <td><img src="${user.avatar}" alt="${user.name}" width="30" style="vertical-align: middle; border-radius: 50%; margin-right: 10px;">${user.name}</td>
+                                <td>${user.email}</td>
+                                <td>${user.login}</td>
+                                <td>${user.address.street}, ${user.address.city}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+           
+            document.getElementById('app').appendChild(tableSection);
+        }
+
+        // Fonction qui simule la récupération des commandes de l'utilisateur
+        function fetchUserOrders(login) {
+            console.log(`Récupération des commandes pour l'utilisateur ${login}...`);
+           
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const orders = ordersDatabase[login] || [];
+                    console.log("Commandes récupérées !");
+                    resolve(orders);
+                }, 1000);
+            });
+        }
+
+        // Fonction pour afficher les commandes
+        function displayOrders(orders, userName) {
+            const ordersSection = document.createElement('div');
+            ordersSection.className = 'orders';
+            ordersSection.innerHTML = `
+                <h2>Commandes de ${userName}</h2>
+                <ul>
+                    ${orders.map(order => `
+                        <li>
+                            <strong>${order.product}</strong> -
+                            $${order.amount.toFixed(2)} -
+                            <em>${new Date(order.date).toLocaleDateString()}</em>
+                        </li>
+                    `).join('')}
+                </ul>
+                <p>Total: $${orders.reduce((sum, order) => sum + order.amount, 0).toFixed(2)}</p>
+                <p>Nombre de commandes: ${orders.length}</p>
+            `;
+            document.getElementById('app').appendChild(ordersSection);
+        }
+
+        // Fonction principale qui enchaîne les opérations asynchrones
+        async function userProfileWorkflow(userId = 1) {
+            try {
+                // Afficher le chargement
+                document.getElementById('app').innerHTML = '<p class="loading">Chargement des données utilisateur...</p>';
+               
+                // 1. Récupérer les données utilisateur
+                const user = await fetchUserData(userId);
+               
+                // 2. Afficher le profil
+                displayProfile(user);
+               
+                // 3. Afficher d'autres utilisateurs dans un tableau
+                await createAndDisplayUsers();
+               
+                // 4. Récupérer les commandes de l'utilisateur
+                const orders = await fetchUserOrders(user.login);
+               
+                // Mettre à jour l'objet utilisateur
+                user.orders = orders;
+               
+                // 5. Afficher les commandes
+                displayOrders(orders, user.name);
+               
+            } catch (error) {
+                console.error("Une erreur est survenue:", error);
+                document.getElementById('app').innerHTML = `
+                    <div class="error">
+                        <h2>Erreur</h2>
+                        <p>${error.message}</p>
+                        <button onclick="userProfileWorkflow(1)">Revenir au profil par défaut</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Gestionnaire d'événement pour changer d'utilisateur
+        document.getElementById('change-user').addEventListener('click', function() {
+            const select = document.getElementById('user-select');
+            const selectedUserId = parseInt(select.value);
+            userProfileWorkflow(selectedUserId);
+        });
+
+        // Exécution initiale avec le premier utilisateur
+        userProfileWorkflow(1);
+    </script>
+</body>
+</html>
