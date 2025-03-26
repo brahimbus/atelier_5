@@ -1,0 +1,109 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>File Manager</title>
+        <style>
+            .file-list {
+                margin-top: 20px;
+            }
+            .error {
+                color: red;
+            }
+            .success {
+                color: green;
+            }
+        </style>
+    </head>
+    <body>
+        <h2>Upload File</h2>
+        <input type="file" id="fileInput" />
+        <button onclick="uploadFile()">Upload</button>
+
+        <h2>Files List</h2>
+        <button onclick="getFiles()">Refresh Files</button>
+        <div id="fileList" class="file-list"></div>
+        <div id="message"></div>
+
+        <script>
+            async function uploadFile() {
+                try {
+                    const fileInput = document.getElementById("fileInput");
+                    const file = fileInput.files[0];
+
+                    if (!file) {
+                        showMessage("Please select a file", "error");
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append("file", file);
+
+                    const response = await fetch("/api/upload", {
+                        method: "POST",
+                        body: formData,
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        showMessage(data.message, "success");
+                        getFiles();
+                    } else {
+                        throw new Error(data.message);
+                    }
+                } catch (error) {
+                    showMessage(error.message, "error");
+                }
+            }
+
+            async function getFiles() {
+                try {
+                    const response = await fetch("/api/files", {
+                        method: "GET",
+                    });
+
+                    const files = await response.json();
+
+                    if (response.ok) {
+                        displayFiles(files);
+                    } else {
+                        throw new Error("Failed to fetch files");
+                    }
+                } catch (error) {
+                    showMessage(error.message, "error");
+                }
+            }
+
+            function displayFiles(files) {
+                const fileList = document.getElementById("fileList");
+                fileList.innerHTML = "";
+
+                if (files.length === 0) {
+                    fileList.innerHTML = "<p>No files found</p>";
+                    return;
+                }
+
+                const ul = document.createElement("ul");
+                files.forEach((file) => {
+                    const li = document.createElement("li");
+                    li.textContent = file;
+                    ul.appendChild(li);
+                });
+                fileList.appendChild(ul);
+            }
+
+            function showMessage(message, type) {
+                const messageDiv = document.getElementById("message");
+                messageDiv.textContent = message;
+                messageDiv.className = type;
+                setTimeout(() => {
+                    messageDiv.textContent = "";
+                    messageDiv.className = "";
+                }, 3000);
+            }
+
+            getFiles();
+        </script>
+    </body>
+</html>
